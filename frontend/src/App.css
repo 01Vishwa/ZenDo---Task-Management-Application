@@ -7,6 +7,11 @@
   min-height: 100vh;
 }
 
+/* Dark mode support */
+.dark {
+  color-scheme: dark;
+}
+
 /* Stats Cards */
 .stats-card {
   @apply transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl;
@@ -30,6 +35,10 @@
 
 .stats-card-today {
   background: linear-gradient(135deg, #EF4444 0%, #EC4899 100%);
+}
+
+.stats-card-upcoming {
+  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
 }
 
 /* Navigation */
