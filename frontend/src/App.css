@@ -1,38 +1,215 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for ZenDo */
 .App {
-    text-align: center;
+  min-height: 100vh;
 }
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Stats Cards */
+.stats-card {
+  @apply transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.stats-card-total {
+  background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.stats-card-completed {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
 }
 
-.App-link {
-    color: #61dafb;
+.stats-card-pending {
+  background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.stats-card-projects {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+}
+
+.stats-card-today {
+  background: linear-gradient(135deg, #EF4444 0%, #EC4899 100%);
+}
+
+/* Navigation */
+.nav-item {
+  @apply flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200;
+}
+
+.nav-item-active {
+  @apply bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg transform scale-105;
+}
+
+.nav-item-inactive {
+  @apply text-gray-600 hover:bg-purple-50 hover:text-purple-600;
+}
+
+/* Card hover effects */
+.bg-white {
+  @apply transition-all duration-300;
+}
+
+.bg-white:hover {
+  @apply transform -translate-y-1 shadow-lg;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #8B5CF6;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7C3AED;
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Form elements */
+input:focus,
+select:focus,
+textarea:focus {
+  @apply outline-none ring-2 ring-purple-500 border-purple-500;
+}
+
+/* Buttons */
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Calendar styling */
+.fc {
+  font-family: inherit;
+}
+
+.fc-theme-standard th,
+.fc-theme-standard td {
+  border-color: #E5E7EB;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border-color: #E5E7EB;
+}
+
+.fc-button-primary {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important;
+  border-color: #8B5CF6 !important;
+  border-radius: 0.75rem !important;
+}
+
+.fc-button-primary:hover {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%) !important;
+}
+
+.fc-button-primary:focus {
+  box-shadow: 0 0 0 2px #8B5CF6 !important;
+}
+
+.fc-event {
+  border-radius: 0.5rem !important;
+  border: none !important;
+  font-weight: 500 !important;
+}
+
+.fc-daygrid-event {
+  margin: 2px !important;
+}
+
+/* Drag and drop */
+.react-beautiful-dnd-dragging {
+  transform: rotate(5deg);
+}
+
+/* Dark mode styles (if needed later) */
+.dark {
+  /* Add dark mode styles here */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .nav-item {
+    @apply px-3 py-2 text-sm;
+  }
+  
+  .stats-card {
+    @apply p-4;
+  }
+  
+  .stats-card h3 {
+    @apply text-lg;
+  }
+  
+  .stats-card p {
+    @apply text-2xl;
+  }
+}
+
+/* Print styles */
+@media print {
+  .nav-item,
+  button {
+    display: none !important;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+  @apply outline-none ring-2 ring-purple-500 ring-opacity-50;
+}
+
+/* Loading states */
+.loading {
+  @apply animate-pulse;
+}
+
+/* Empty states */
+.empty-state {
+  @apply text-center py-16;
+}
+
+.empty-state svg {
+  @apply w-16 h-16 text-gray-300 mx-auto mb-4;
+}
+
+.empty-state h3 {
+  @apply text-xl font-semibold text-gray-500 mb-2;
+}
+
+.empty-state p {
+  @apply text-gray-400;
 }
