@@ -16,7 +16,8 @@ import {
   MagnifyingGlassIcon,
   StarIcon,
   CreditCardIcon,
-  ChatBubbleBottomCenterTextIcon
+  ChatBubbleBottomCenterTextIcon,
+  Bars3Icon
 } from "@heroicons/react/24/outline";
 import { 
   CheckIcon, 
@@ -117,6 +118,7 @@ const Navigation = () => {
   const { logout, user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
@@ -140,116 +142,150 @@ const Navigation = () => {
     { path: '/projects', icon: ChartBarIcon, label: 'Projects' },
     { path: '/calendar', icon: CalendarIcon, label: 'Calendar' },
     { path: '/search', icon: MagnifyingGlassIcon, label: 'Search' },
-    { path: '/slack', icon: ChatBubbleBottomCenterTextIcon, label: 'Slack' },
+    // { path: '/slack', icon: ChatBubbleBottomCenterTextIcon, label: 'Slack' },
   ];
 
   return (
-    <nav className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-r w-64 min-h-screen transition-colors duration-200`}>
-      <div className="p-6">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">Z</span>
-          </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            ZenDo
-          </h1>
-          {user?.is_premium && (
-            <SparklesIcon className="w-5 h-5 text-yellow-500" />
-          )}
-        </div>
+    <>
+      {/* Top Navigation Bar */}
+      <nav className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm border-b transition-colors duration-200 sticky top-0 z-50`}>
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">Z</span>
+              </div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent hidden sm:block">
+                ZenDo
+              </h1>
+              {user?.is_premium && (
+                <SparklesIcon className="w-5 h-5 text-yellow-500 hidden sm:block" />
+              )}
+            </div>
 
-        <div className="space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`nav-item flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'nav-item-active bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg transform scale-105' 
-                    : `nav-item-inactive ${isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'}`
-                }`}
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg' 
+                        : `${isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'}`
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Right side actions */}
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              {notifications.length > 0 && (
+                <div className="relative">
+                  <BellIcon className="w-6 h-6 text-red-500" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                </div>
+              )}
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg ${isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'} transition-colors`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
+                {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+              </button>
 
-          {/* Premium Link */}
-          {!user?.is_premium && (
-            <Link
-              to="/premium"
-              className={`nav-item flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                location.pathname === '/premium'
-                  ? 'nav-item-active bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg transform scale-105'
-                  : `nav-item-inactive ${isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'}`
-              }`}
-            >
-              <StarIcon className="w-5 h-5" />
-              <span className="font-medium">Upgrade to Pro</span>
-            </Link>
-          )}
+              {/* User Menu */}
+              <div className="relative">
+                <div className={`flex items-center space-x-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <div className="hidden sm:block text-right">
+                    <div className="text-sm font-medium">{user?.username}</div>
+                    {user?.is_premium && (
+                      <div className="text-xs text-yellow-600 font-medium">Premium</div>
+                    )}
+                  </div>
+                  <button
+                    onClick={logout}
+                    className={`p-2 rounded-lg ${isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-red-400' : 'text-gray-600 hover:bg-purple-50 hover:text-red-600'} transition-colors`}
+                  >
+                    <UserIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition-colors"
+              >
+                {isMobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className={`mt-8 pt-8 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          {/* Notifications */}
-          {notifications.length > 0 && (
-            <div className="mb-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <BellIcon className="w-4 h-4 text-red-500" />
-                <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Notifications ({notifications.length})
-                </span>
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className={`md:hidden ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-t`}>
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg' 
+                        : `${isDark ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'}`
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+              
+              {/* Mobile user info */}
+              <div className={`px-3 py-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                <div className="text-sm font-medium">{user?.username}</div>
+                {user?.is_premium && (
+                  <div className="text-xs text-yellow-600 font-medium">Premium User</div>
+                )}
               </div>
             </div>
-          )}
-
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={toggleTheme}
-              className={`flex items-center space-x-2 ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-purple-600'} transition-colors`}
-            >
-              {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-              <span className="text-sm">{isDark ? 'Light' : 'Dark'}</span>
-            </button>
           </div>
-          
-          <div className={`mb-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            <div className="text-xs mb-1">Signed in as</div>
-            <div className="text-sm font-medium">{user?.username}</div>
-            {user?.is_premium && (
-              <div className="text-xs text-yellow-600 font-medium">Premium User</div>
-            )}
-          </div>
-          
-          <button
-            onClick={logout}
-            className={`flex items-center space-x-2 ${isDark ? 'text-gray-300 hover:text-red-400' : 'text-gray-600 hover:text-red-600'} transition-colors w-full`}
-          >
-            <UserIcon className="w-5 h-5" />
-            <span className="text-sm">Logout</span>
-          </button>
-        </div>
-      </div>
-    </nav>
+        )}
+      </nav>
+    </>
   );
 };
 
 const StatsCard = ({ title, value, icon: Icon, color, trend, isDark }) => (
-  <div className={`stats-card ${color} p-6 rounded-2xl transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl`}>
+  <div className={`stats-card ${color} p-3 sm:p-6 rounded-xl sm:rounded-2xl transform hover:-translate-y-2 transition-all duration-300 shadow-lg hover:shadow-xl`}>
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-white/80 text-sm font-medium">{title}</p>
-        <p className="text-3xl font-bold text-white mt-1">{value}</p>
+        <p className="text-white/80 text-xs sm:text-sm font-medium">{title}</p>
+        <p className="text-lg sm:text-3xl font-bold text-white mt-1">{value}</p>
         {trend && (
           <p className="text-white/60 text-xs mt-2">{trend}</p>
         )}
       </div>
-      <div className="bg-white/20 p-3 rounded-xl">
-        <Icon className="w-8 h-8 text-white" />
+      <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl">
+        <Icon className="w-5 h-5 sm:w-8 sm:h-8 text-white" />
       </div>
     </div>
   </div>
@@ -274,10 +310,10 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, isDark }) => {
   };
 
   return (
-    <div className={`${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-200 hover:bg-gray-50'} rounded-2xl p-6 shadow-sm border transition-all duration-300 transform hover:-translate-y-1`}>
-      <div className="flex items-start justify-between mb-4">
-        <h3 className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} text-lg`}>{task.title}</h3>
-        <div className="flex items-center space-x-2">
+    <div className={`${isDark ? 'bg-gray-800 border-gray-700 hover:bg-gray-750' : 'bg-white border-gray-200 hover:bg-gray-50'} rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border transition-all duration-300 transform hover:-translate-y-1`}>
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
+        <h3 className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} text-base sm:text-lg`}>{task.title}</h3>
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
             {task.priority}
           </span>
@@ -286,11 +322,11 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, isDark }) => {
       </div>
       
       {task.description && (
-        <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4 text-sm`}>{task.description}</p>
+        <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mb-3 sm:mb-4 text-sm`}>{task.description}</p>
       )}
 
       {task.tags && task.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-4">
+        <div className="flex flex-wrap gap-1 mb-3 sm:mb-4">
           {task.tags.map((tag, index) => (
             <span key={index} className={`px-2 py-1 rounded-full text-xs ${isDark ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-600'}`}>
               #{tag}
@@ -299,13 +335,15 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, isDark }) => {
         </div>
       )}
       
-      <div className={`flex items-center justify-between text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-4`}>
-        <span>{new Date(task.start_time).toLocaleString()}</span>
-        <span>→</span>
-        <span>{new Date(task.end_time).toLocaleString()}</span>
+      <div className={`flex items-center justify-between text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-3 sm:mb-4`}>
+        <span className="hidden sm:block">{new Date(task.start_time).toLocaleString()}</span>
+        <span className="sm:hidden">{new Date(task.start_time).toLocaleDateString()}</span>
+        <span className="hidden sm:block">→</span>
+        <span className="hidden sm:block">{new Date(task.end_time).toLocaleString()}</span>
+        <span className="sm:hidden">{new Date(task.end_time).toLocaleDateString()}</span>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-2">
         <select
           value={task.status}
           onChange={(e) => onStatusChange(task.id, e.target.value)}
@@ -563,19 +601,19 @@ const LoginPage = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} flex items-center justify-center transition-colors duration-200`}>
-      <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-8 rounded-2xl shadow-2xl w-full max-w-md`}>
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">Z</span>
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} flex items-center justify-center transition-colors duration-200 p-4`}>
+      <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} p-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md`}>
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-xl sm:text-2xl">Z</span>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
             ZenDo
           </h1>
-          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-2`}>Your personal taskflow manager</p>
+          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} mt-2 text-sm sm:text-base`}>Your personal taskflow manager</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           {!isLogin && (
             <div>
               <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-2`}>Username</label>
@@ -584,7 +622,7 @@ const LoginPage = () => {
                 required={!isLogin}
                 value={formData.username}
                 onChange={(e) => setFormData({...formData, username: e.target.value})}
-                className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
               />
             </div>
           )}
@@ -596,7 +634,7 @@ const LoginPage = () => {
               required
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
             />
           </div>
           
@@ -607,13 +645,13 @@ const LoginPage = () => {
               required
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
             />
           </div>
           
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg sm:rounded-xl font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-base"
           >
             {isLogin ? 'Sign In' : 'Create Account'}
           </button>
@@ -673,14 +711,14 @@ const Dashboard = () => {
   };
 
   return (
-    <div className={`p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
+    <div className={`p-4 sm:p-6 lg:p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Welcome to ZenDo</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Welcome to ZenDo</h1>
           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Here's an overview of your productivity today</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <StatsCard
             title="Total Tasks"
             value={stats.total_tasks}
@@ -810,11 +848,11 @@ const TasksPage = () => {
   });
 
   return (
-    <div className={`p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
+    <div className={`p-4 sm:p-6 lg:p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Tasks</h1>
+            <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Tasks</h1>
             <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Manage your personal tasks and stay organized</p>
           </div>
           <button
@@ -822,14 +860,14 @@ const TasksPage = () => {
               setEditingTask(null);
               setIsModalOpen(true);
             }}
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2"
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 sm:px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
           >
             <PlusIcon className="w-5 h-5" />
             <span>New Task</span>
           </button>
         </div>
 
-        <div className="flex items-center space-x-4 mb-8">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 sm:mb-8">
           <span className={`${isDark ? 'text-gray-200' : 'text-gray-700'} font-medium`}>Filter:</span>
           {[
             { key: 'all', label: 'All Tasks' },
@@ -840,7 +878,7 @@ const TasksPage = () => {
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+              className={`px-3 sm:px-4 py-2 rounded-lg sm:rounded-xl font-medium transition-all duration-200 text-sm sm:text-base ${
                 filter === key
                   ? 'bg-purple-500 text-white shadow-lg'
                   : `${isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-white text-gray-600 hover:bg-purple-50 hover:text-purple-600'}`
@@ -851,7 +889,7 @@ const TasksPage = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredTasks.map(task => (
             <TaskCard
               key={task.id}
@@ -931,10 +969,10 @@ const SearchPage = () => {
   };
 
   return (
-    <div className={`p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
+    <div className={`p-4 sm:p-6 lg:p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Search Tasks</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Search Tasks</h1>
           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Find your tasks quickly with advanced search and filters</p>
         </div>
 
@@ -1626,7 +1664,7 @@ const Layout = ({ children }) => {
   const { isDark } = useTheme();
   
   return (
-    <div className={`flex ${isDark ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-200`}>
+    <div className={`${isDark ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-200 min-h-screen`}>
       <Navigation />
       <div className="flex-1">
         {children}

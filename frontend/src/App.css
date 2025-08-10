@@ -173,6 +173,69 @@ button:disabled {
   .stats-card p {
     @apply text-2xl;
   }
+  
+  /* Mobile navigation adjustments */
+  .mobile-nav {
+    @apply fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50;
+  }
+  
+  .mobile-nav-content {
+    @apply bg-white dark:bg-gray-800 w-full max-w-sm h-full overflow-y-auto;
+  }
+  
+  /* Mobile form adjustments */
+  .mobile-form {
+    @apply p-4;
+  }
+  
+  .mobile-form input,
+  .mobile-form select,
+  .mobile-form textarea {
+    @apply text-base;
+  }
+  
+  /* Mobile button adjustments */
+  .mobile-button {
+    @apply w-full py-3 text-base;
+  }
+  
+  /* Mobile card adjustments */
+  .mobile-card {
+    @apply p-4;
+  }
+  
+  /* Mobile grid adjustments */
+  .mobile-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  /* Mobile text adjustments */
+  .mobile-text {
+    @apply text-sm;
+  }
+  
+  .mobile-heading {
+    @apply text-xl;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .mobile-heading {
+    @apply text-lg;
+  }
+  
+  .mobile-text {
+    @apply text-xs;
+  }
+  
+  .mobile-card {
+    @apply p-3;
+  }
+  
+  .mobile-button {
+    @apply py-2 text-sm;
+  }
 }
 
 /* Print styles */

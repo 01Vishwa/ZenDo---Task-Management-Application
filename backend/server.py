@@ -21,7 +21,7 @@ import json
 import re
 from croniter import croniter
 from slack_sdk import WebClient
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
+import stripe
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -32,7 +32,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Security
-SECRET_KEY = "your-secret-key-here-change-in-production"
+SECRET_KEY = "1nCaMObXCst877vo-5CrZPjxDbpPmP663VXWZUGLsPk"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
@@ -45,6 +45,8 @@ SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN')
 
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+if STRIPE_API_KEY:
+    stripe.api_key = STRIPE_API_KEY
 
 # Premium plans
 PREMIUM_PLANS = {
@@ -56,6 +58,13 @@ PREMIUM_PLANS = {
 # Create the main app without a prefix
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -701,28 +710,35 @@ async def create_checkout_session(
     plan_info = PREMIUM_PLANS[checkout_request.plan]
     amount = plan_info["price"]
     
-    # Initialize Stripe checkout
-    webhook_url = f"{checkout_request.origin_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
-    
     # Create URLs
     success_url = f"{checkout_request.origin_url}/premium/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{checkout_request.origin_url}/premium"
     
-    # Create checkout session
-    checkout_session_request = CheckoutSessionRequest(
-        amount=amount,
-        currency="usd",
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata={
-            "user_id": current_user.id,
-            "plan": checkout_request.plan,
-            "source": "web_checkout"
-        }
-    )
-    
-    session = await stripe_checkout.create_checkout_session(checkout_session_request)
+    # Create checkout session using Stripe
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': plan_info["name"],
+                    },
+                    'unit_amount': int(amount * 100),  # Convert to cents
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "user_id": current_user.id,
+                "plan": checkout_request.plan,
+                "source": "web_checkout"
+            }
+        )
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
     
     # Create payment transaction record
     transaction = PaymentTransaction(
@@ -748,13 +764,17 @@ async def get_checkout_status(session_id: str, current_user: User = Depends(get_
         return {"status": "complete", "payment_status": "paid"}
     
     # Get status from Stripe
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url="")
-    checkout_status = await stripe_checkout.get_checkout_status(session_id)
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        payment_status = "paid" if session.payment_status == "paid" else "unpaid"
+        status = session.status
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
     
     # Update transaction status
     update_data = {
-        "status": checkout_status.status,
-        "payment_status": checkout_status.payment_status,
+        "status": status,
+        "payment_status": payment_status,
         "updated_at": datetime.utcnow()
     }
     
@@ -794,14 +814,20 @@ async def handle_stripe_webhook(request: Request):
     webhook_body = await request.body()
     signature = request.headers.get("Stripe-Signature")
     
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url="")
-    
     try:
-        webhook_response = await stripe_checkout.handle_webhook(webhook_body, signature)
+        # Verify webhook signature
+        webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET')
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(
+                webhook_body, signature, webhook_secret
+            )
+        else:
+            # For development, parse without verification
+            event = json.loads(webhook_body)
         
-        if webhook_response.event_type == "checkout.session.completed":
+        if event['type'] == "checkout.session.completed":
             # Update transaction and user
-            session_id = webhook_response.session_id
+            session_id = event['data']['object']['id']
             transaction = await db.payment_transactions.find_one({"session_id": session_id})
             
             if transaction and transaction["status"] != "completed":
@@ -867,3 +893,13 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "server:app",
+        host="0.0.0.0",  # Run on all hosts
+        port=8000,
+        reload=True,  # Enable auto-reload for development
+        log_level="info"
+    )
