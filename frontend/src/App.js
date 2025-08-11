@@ -17,7 +17,9 @@ import {
   StarIcon,
   CreditCardIcon,
   ChatBubbleBottomCenterTextIcon,
-  Bars3Icon
+  Bars3Icon,
+  EyeIcon,
+  EyeSlashIcon
 } from "@heroicons/react/24/outline";
 import { 
   CheckIcon, 
@@ -576,6 +578,8 @@ const TaskModal = ({ isOpen, onClose, task, onSave, isDark }) => {
 // Pages
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -586,6 +590,7 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       const endpoint = isLogin ? '/login' : '/register';
       const data = isLogin 
@@ -596,7 +601,7 @@ const LoginPage = () => {
       login(response.data.access_token);
       toast.success(isLogin ? 'Welcome back!' : 'Account created successfully!');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Authentication failed');
+      setError(error.response?.data?.detail || 'Authentication failed');
     }
   };
 
@@ -621,7 +626,10 @@ const LoginPage = () => {
                 type="text"
                 required={!isLogin}
                 value={formData.username}
-                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                onChange={(e) => {
+                  setFormData({...formData, username: e.target.value});
+                  setError('');
+                }}
                 className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
               />
             </div>
@@ -633,20 +641,39 @@ const LoginPage = () => {
               type="email"
               required
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => {
+                setFormData({...formData, email: e.target.value});
+                setError('');
+              }}
               className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
             />
           </div>
           
           <div>
             <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'} mb-2`}>Password</label>
-            <input
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.password}
+                onChange={(e) => {
+                  setFormData({...formData, password: e.target.value});
+                  setError('');
+                }}
+                className={`w-full border ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-300 text-gray-900'} rounded-lg sm:rounded-xl px-3 sm:px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500 text-base`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+              >
+                {showPassword ? (
+                  <EyeSlashIcon className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                ) : (
+                  <EyeIcon className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                )}
+              </button>
+            </div>
           </div>
           
           <button
@@ -655,11 +682,17 @@ const LoginPage = () => {
           >
             {isLogin ? 'Sign In' : 'Create Account'}
           </button>
+          {error && (
+            <p className="text-red-500 text-sm text-center pt-2">{error}</p>
+          )}
         </form>
 
         <div className="text-center mt-6">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+            }}
             className="text-purple-600 hover:text-purple-700 text-sm font-medium"
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
@@ -682,6 +715,8 @@ const Dashboard = () => {
     is_premium: false
   });
   const [recentTasks, setRecentTasks] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -713,9 +748,21 @@ const Dashboard = () => {
   return (
     <div className={`p-4 sm:p-6 lg:p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Welcome to ZenDo</h1>
-          <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Here's an overview of your productivity today</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Welcome to ZenDo</h1>
+            <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Here's an overview of your productivity today</p>
+          </div>
+          <button
+            onClick={() => {
+              setEditingTask(null);
+              setIsModalOpen(true);
+            }}
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 sm:px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>New Task</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-6 mb-6 sm:mb-8">
@@ -780,6 +827,17 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        <TaskModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingTask(null);
+          }}
+          task={editingTask}
+          onSave={fetchDashboardData}
+          isDark={isDark}
+        />
       </div>
     </div>
   );
@@ -1269,6 +1327,8 @@ const ProjectsPage = () => {
 const CalendarPage = () => {
   const { isDark } = useTheme();
   const [tasks, setTasks] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -1298,10 +1358,23 @@ const CalendarPage = () => {
   return (
     <div className={`p-8 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-indigo-50'} min-h-screen transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
         <div className="mb-8">
           <h1 className={`text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Calendar</h1>
           <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'}`}>View and manage your tasks in calendar format</p>
         </div>
+          <button
+            onClick={() => {
+              setEditingTask(null);
+              setIsModalOpen(true);
+            }}
+            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 sm:px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>New Task</span>
+          </button>
+        </div>
+
 
         <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} rounded-2xl p-8 shadow-lg border transition-colors duration-200`}>
           <div className={isDark ? 'calendar-dark' : ''}>
