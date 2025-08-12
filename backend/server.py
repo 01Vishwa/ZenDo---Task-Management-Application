@@ -22,6 +22,8 @@ import re
 from croniter import croniter
 from slack_sdk import WebClient
 import stripe
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import requests
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -104,6 +106,7 @@ class TaskCreate(BaseModel):
     recurring_pattern: Optional[str] = None  # daily, weekly, monthly, custom cron
     tags: List[str] = []
     reminders: List[datetime] = []
+    notify_by_email: bool = False
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -115,6 +118,7 @@ class TaskUpdate(BaseModel):
     project_id: Optional[str] = None
     tags: Optional[List[str]] = None
     reminders: Optional[List[datetime]] = None
+    notify_by_email: Optional[bool] = None
 
 class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -129,6 +133,7 @@ class Task(BaseModel):
     recurring_pattern: Optional[str] = None
     tags: List[str] = []
     reminders: List[datetime] = []
+    notify_by_email: bool = False
     user_id: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -874,6 +879,29 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# async def check_upcoming_tasks():
+#     now = datetime.utcnow()
+#     one_hour_later = now + timedelta(hours=1)
+    
+#     tasks_cursor = db.tasks.find({
+#         "start_time": {"$gte": now, "$lt": one_hour_later},
+#         "notify_by_email": True
+#     })
+    
+#     async for task in tasks_cursor:
+#         user = await db.users.find_one({"id": task["user_id"]})
+#         if user:
+#             payload = {
+#                 "TO": user["email"],
+#                 "sub": "Upcoming Task Reminder",
+#                 "body": f"Your task '{task['title']}' is starting in less than an hour."
+#             }
+#             try:
+#                 requests.post('https://hooks.konnectify.co/webhook/v1/KvOIOTol3d', json=payload)
+#                 logger.info(f"Sent email notification for task {task['id']} to {user['email']}")
+#             except Exception as e:
+#                 logger.error(f"Failed to send email for task {task['id']}: {e}")
+
 @app.on_event("startup")
 async def startup_event():
     # Create indexes for better performance
@@ -889,6 +917,10 @@ async def startup_event():
         logger.info("Database indexes created successfully")
     except Exception as e:
         logger.error(f"Error creating indexes: {e}")
+
+    # scheduler = AsyncIOScheduler()
+    # scheduler.add_job(check_upcoming_tasks, 'interval', minutes=1)
+    # scheduler.start()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
