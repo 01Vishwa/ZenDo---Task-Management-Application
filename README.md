@@ -59,11 +59,6 @@ Built with **React** and **Tailwind CSS**, it offers a responsive and intuitive 
 
 ---
 
-## 📸 Screenshots
-*(Add your app screenshots here for better visual presentation)*
-
----
-
 ## 📦 Installation & Setup
 
 ```bash
